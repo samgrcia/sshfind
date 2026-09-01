@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sshfind"
-version = "0.1.0"
+version = "0.2.0"
 description = "Search SSH configurations by host pattern"
 authors = ["Samuel Garcia <13480326+samgrcia@users.noreply.github.com>"]
 
