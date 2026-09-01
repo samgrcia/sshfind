@@ -48,17 +48,17 @@ SSH_OPTION_KEYWORDS = {
 }
 
 
-def _parse_host_line(rest: str) -> tuple[list[str], dict[str, str]]:
+def _parse_host_line(rest: str) -> tuple[list[str], list[tuple[str, str]]]:
     """Parse a Host line value into host patterns and optional inline options."""
     tokens = rest.split()
     patterns: list[str] = []
-    options: dict[str, str] = {}
+    options: list[tuple[str, str]] = []
     i = 0
     while i < len(tokens):
         if tokens[i].lower() in SSH_OPTION_KEYWORDS:
             # remaining tokens are key-value pairs
             while i + 1 < len(tokens):
-                options[tokens[i]] = tokens[i + 1]
+                options.append((tokens[i], tokens[i + 1]))
                 i += 2
             break
         patterns.append(tokens[i])
@@ -136,16 +136,12 @@ def parse_config_file(path: str | Path, visited: set | None = None) -> list[dict
                 "type": "Match",
                 "patterns": host_patterns,
                 "match_conditions": rest,
-                "options": {},
+                "options": [],
                 "source": str(path),
             }
 
         elif current_block is not None:
-            key = keyword
-            value = rest
-            # First occurrence wins, matching OpenSSH behaviour
-            if key not in current_block["options"]:
-                current_block["options"][key] = value
+            current_block["options"].append((keyword, rest))
 
     if current_block:
         blocks.append(current_block)
@@ -184,7 +180,7 @@ def _options_cell(block: dict) -> str:
     """Format a block's options as a multi-line rich string."""
     if not block["options"]:
         return "[dim](no options)[/dim]"
-    return "\n".join(f"[green]{k}[/green] {v}" for k, v in block["options"].items())
+    return "\n".join(f"[green]{k}[/green] {v}" for k, v in block["options"])
 
 
 def _host_cell(block: dict) -> str:
@@ -207,7 +203,7 @@ def _match_options_cell(block: dict) -> str:
     conditions = block.get("match_conditions", "")
     if conditions:
         lines.append(f"[dim]match {conditions}[/dim]")
-    lines.extend(f"[green]{k}[/green] {v}" for k, v in block["options"].items())
+    lines.extend(f"[green]{k}[/green] {v}" for k, v in block["options"])
     return "\n".join(lines) if lines else "[dim](no options)[/dim]"
 
 
@@ -253,7 +249,7 @@ def display_results_plain(matches: list[dict]) -> None:
         print(sep)
         for block in blocks:
             patterns = " ".join(block["patterns"])
-            options = list(block["options"].items())
+            options = block["options"]
             first_opt = f"{options[0][0]} {options[0][1]}" if options else "(no options)"
             print(f"  {patterns:<30}  {first_opt}")
             for k, v in options[1:]:

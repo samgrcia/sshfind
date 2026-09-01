@@ -10,6 +10,11 @@ from sshfind import (
 )
 
 
+def opts(block) -> dict:
+    """Convert a block's options list to a dict (for single-value assertions)."""
+    return dict(block["options"])
+
+
 # ---------------------------------------------------------------------------
 # _parse_host_line
 # ---------------------------------------------------------------------------
@@ -18,37 +23,37 @@ class TestParseHostLine:
     def test_single_pattern(self):
         patterns, options = _parse_host_line("myserver")
         assert patterns == ["myserver"]
-        assert options == {}
+        assert options == []
 
     def test_wildcard_patterns(self):
         patterns, options = _parse_host_line("web* api*")
         assert patterns == ["web*", "api*"]
-        assert options == {}
+        assert options == []
 
     def test_inline_single_option(self):
         patterns, options = _parse_host_line("myserver Hostname 192.168.1.1")
         assert patterns == ["myserver"]
-        assert options == {"Hostname": "192.168.1.1"}
+        assert options == [("Hostname", "192.168.1.1")]
 
     def test_inline_multiple_options(self):
         patterns, options = _parse_host_line("myserver User admin Port 22")
         assert patterns == ["myserver"]
-        assert options == {"User": "admin", "Port": "22"}
+        assert options == [("User", "admin"), ("Port", "22")]
 
     def test_option_keyword_case_insensitive(self):
         patterns, options = _parse_host_line("myserver hostname 10.0.0.1")
         assert patterns == ["myserver"]
-        assert options == {"hostname": "10.0.0.1"}
+        assert options == [("hostname", "10.0.0.1")]
 
     def test_empty_string(self):
         patterns, options = _parse_host_line("")
         assert patterns == []
-        assert options == {}
+        assert options == []
 
     def test_wildcard_only(self):
         patterns, options = _parse_host_line("*")
         assert patterns == ["*"]
-        assert options == {}
+        assert options == []
 
 
 # ---------------------------------------------------------------------------
@@ -100,9 +105,10 @@ class TestParseConfigFile:
         b = blocks[0]
         assert b["type"] == "Host"
         assert b["patterns"] == ["myserver"]
-        assert b["options"]["Hostname"] == "10.0.0.1"
-        assert b["options"]["User"] == "deploy"
-        assert b["options"]["Port"] == "2222"
+        o = opts(b)
+        assert o["Hostname"] == "10.0.0.1"
+        assert o["User"] == "deploy"
+        assert o["Port"] == "2222"
 
     def test_multiple_host_blocks(self, tmp_path):
         config = tmp_path / "config"
@@ -129,7 +135,7 @@ class TestParseConfigFile:
         b = blocks[0]
         assert b["type"] == "Match"
         assert b["patterns"] == ["staging*"]
-        assert b["options"]["ProxyCommand"] == "ssh bastion nc %h %p"
+        assert opts(b)["ProxyCommand"] == "ssh bastion nc %h %p"
 
     def test_inline_option_on_host_line(self, tmp_path):
         config = tmp_path / "config"
@@ -137,7 +143,7 @@ class TestParseConfigFile:
         blocks = parse_config_file(config)
         assert len(blocks) == 1
         assert blocks[0]["patterns"] == ["myserver"]
-        assert blocks[0]["options"]["Hostname"] == "10.0.0.5"
+        assert opts(blocks[0])["Hostname"] == "10.0.0.5"
 
     def test_comments_and_blank_lines_ignored(self, tmp_path):
         config = tmp_path / "config"
@@ -150,17 +156,20 @@ class TestParseConfigFile:
         )
         blocks = parse_config_file(config)
         assert len(blocks) == 1
-        assert blocks[0]["options"] == {"User": "alice"}
+        assert blocks[0]["options"] == [("User", "alice")]
 
-    def test_first_occurrence_wins(self, tmp_path):
+    def test_duplicate_options_all_preserved(self, tmp_path):
         config = tmp_path / "config"
         config.write_text(
-            "Host myserver\n"
-            "  User first\n"
-            "  User second\n"
+            "Host tunnel\n"
+            "  LocalForward 8080 internal-a:80\n"
+            "  LocalForward 9090 internal-b:90\n"
         )
         blocks = parse_config_file(config)
-        assert blocks[0]["options"]["User"] == "first"
+        assert blocks[0]["options"] == [
+            ("LocalForward", "8080 internal-a:80"),
+            ("LocalForward", "9090 internal-b:90"),
+        ]
 
     def test_include_relative_path(self, tmp_path):
         extra = tmp_path / "extra"
@@ -216,7 +225,7 @@ class TestParseConfigFile:
 
 class TestBlockMatches:
     def _block(self, *patterns):
-        return {"type": "Host", "patterns": list(patterns), "options": {}, "source": ""}
+        return {"type": "Host", "patterns": list(patterns), "options": [], "source": ""}
 
     def test_substring_match(self):
         assert _block_matches(self._block("myserver"), "server", False)
