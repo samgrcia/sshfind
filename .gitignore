@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Poetry
+poetry.lock
+
+# Virtual envs
+.venv/
+
+# pytest
+.pytest_cache/
+
+# editors
+.DS_Store
