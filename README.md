@@ -72,6 +72,25 @@ poetry install
 poetry run sshfind <query>
 ```
 
+## Update
+
+**With pipx**:
+```bash
+pipx upgrade sshfind
+```
+
+**With pip**:
+```bash
+pip install --upgrade git+https://github.com/samgrcia/sshfind.git
+```
+
+**From source**:
+```bash
+cd sshfind
+git pull
+poetry install
+```
+
 ## Development
 
 ```bash
