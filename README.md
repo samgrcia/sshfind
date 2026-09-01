@@ -4,6 +4,8 @@ Search SSH host configurations by pattern.
 
 `sshfind` reads `~/.ssh/config` and recursively follows every `Include` directive it contains. It displays the SSH options of every `Host` (and `Match Host`) block whose name matches the query.
 
+[![asciicast](https://asciinema.org/a/rjutVWHjPo53xVCB.svg)](https://asciinema.org/a/rjutVWHjPo53xVCB)
+
 ## Usage
 
 ```
