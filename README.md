@@ -36,13 +36,13 @@ sshfind prod --all
 `Host` blocks and `Match Host` blocks are displayed in separate tables.
 
 ```
-╭──────────────┬───────────────────────────────╮
-│ Host         │ Options                       │
-├──────────────┼───────────────────────────────┤
-│ prod-server  │ Hostname 10.0.1.42            │
-│ config.d/prod│ User deploy                   │
+╭──────────────┬────────────────────────────────╮
+│ Host         │ Options                        │
+├──────────────┼────────────────────────────────┤
+│ prod-server  │ Hostname 10.0.1.42             │
+│ config.d/prod│ User deploy                    │
 │              │ IdentityFile ~/.ssh/id_ed25519 │
-╰──────────────┴───────────────────────────────╯
+╰──────────────┴────────────────────────────────╯
 ```
 
 ## Installation
