@@ -11,7 +11,7 @@ poetry run pytest tests/ -v  # run all tests
 pipx install . --force   # install globally after changes
 ```
 
-CLI flags: `--regex` (`-r`) for regex mode, `--all` (`-a`) to include `Host *` blocks.
+CLI flags: `--regex` (`-r`) for regex mode, `--all` (`-a`) to include `Host *` blocks, `--simple` (`-s`) for plain copy-pasteable output instead of a table.
 
 ## Architecture
 
@@ -29,7 +29,7 @@ Everything lives in `sshfind.py`. The flow is:
 
 4. **Matching** — `_block_matches()` does a case-insensitive substring search (or regex with `-r`) against each pattern in the block. `Host *` blocks are excluded unless `--all` is passed.
 
-5. **Display** — `display_results_rich()` renders two separate `rich` tables: one for `Host` blocks (cyan), one for `Match Host` blocks (yellow). Match conditions are shown dimmed inside the Options column to avoid blowing out the table width. Falls back to `display_results_plain()` if `rich` is not installed.
+5. **Display** — `display_results_rich()` renders two separate `rich` tables: one for `Host` blocks (cyan), one for `Match Host` blocks (yellow). Match conditions are shown dimmed inside the Options column to avoid blowing out the table width. Falls back to `display_results_plain()` if `rich` is not installed. With `--simple`/`-s`, `display_results_simple()` is used instead of either: it prints each block as valid, directly-pasteable `ssh_config` text (`Host <patterns>` / `Match <conditions>` followed by 4-space-indented `key value` option lines), blank-line separated.
 
 ## Key edge cases
 

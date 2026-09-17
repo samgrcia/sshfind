@@ -268,6 +268,20 @@ def display_results_plain(matches: list[dict]) -> None:
         _print_table(match_blocks, "Match Host")
 
 
+def display_results_simple(matches: list[dict]) -> None:
+    """Print each block as valid, copy-pasteable ssh_config text."""
+    for i, block in enumerate(matches):
+        if i > 0:
+            print()
+        if block["type"] == "Host":
+            name = " ".join(block["patterns"]) if block["patterns"] else "*"
+            print(f"Host {name}")
+        else:
+            print(f"Match {block.get('match_conditions', '')}".rstrip())
+        for k, v in block["options"]:
+            print(f"    {k} {v}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="sshfind",
@@ -287,6 +301,11 @@ def main() -> None:
         action="store_true",
         dest="include_wildcard",
         help="Include 'Host *' catch-all blocks in results",
+    )
+    parser.add_argument(
+        "-s", "--simple",
+        action="store_true",
+        help="Print plain copy-pasteable ssh_config blocks instead of a table",
     )
     args = parser.parse_args()
 
@@ -309,7 +328,9 @@ def main() -> None:
         print(f"No results for '{args.query}'.")
         sys.exit(1)
 
-    if RICH_AVAILABLE:
+    if args.simple:
+        display_results_simple(matches)
+    elif RICH_AVAILABLE:
         display_results_rich(matches)
     else:
         display_results_plain(matches)

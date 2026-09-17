@@ -6,6 +6,7 @@ from sshfind import (
     _extract_match_host_patterns,
     _parse_host_line,
     _short_source,
+    display_results_simple,
     parse_config_file,
 )
 
@@ -266,3 +267,64 @@ class TestShortSource:
         home = str(Path.home())
         result = _short_source(f"{home}/.orbstack/ssh/config")
         assert result == "~/.orbstack/ssh/config"
+
+
+# ---------------------------------------------------------------------------
+# display_results_simple
+# ---------------------------------------------------------------------------
+
+class TestDisplayResultsSimple:
+    def test_host_block(self, capsys):
+        blocks = [{
+            "type": "Host",
+            "patterns": ["pcA"],
+            "options": [("Hostname", "samuel-pcA.local"), ("User", "samuel")],
+            "source": "/x",
+        }]
+        display_results_simple(blocks)
+        out = capsys.readouterr().out
+        assert out == (
+            "Host pcA\n"
+            "    Hostname samuel-pcA.local\n"
+            "    User samuel\n"
+        )
+
+    def test_match_block_uses_match_conditions(self, capsys):
+        blocks = [{
+            "type": "Match",
+            "patterns": ["pcA"],
+            "match_conditions": "host pcA",
+            "options": [("User", "samuel")],
+            "source": "/x",
+        }]
+        display_results_simple(blocks)
+        out = capsys.readouterr().out
+        assert out == (
+            "Match host pcA\n"
+            "    User samuel\n"
+        )
+
+    def test_multiple_blocks_separated_by_blank_line(self, capsys):
+        blocks = [
+            {
+                "type": "Host",
+                "patterns": ["pcA"],
+                "options": [("Hostname", "samuel-pcA.local")],
+                "source": "/x",
+            },
+            {
+                "type": "Host",
+                "patterns": ["pcB"],
+                "options": [("Hostname", "samuel-pcB.local")],
+                "source": "/x",
+            },
+        ]
+        display_results_simple(blocks)
+        out = capsys.readouterr().out
+        assert out == (
+            "Host pcA\n"
+            "    Hostname samuel-pcA.local\n"
+            "\n"
+            "Host pcB\n"
+            "    Hostname samuel-pcB.local\n"
+        )

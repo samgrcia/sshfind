@@ -9,14 +9,15 @@ Search SSH host configurations by pattern.
 ## Usage
 
 ```
-sshfind <query> [-r] [-a]
+sshfind <query> [-r] [-a] [-s]
 ```
 
-| Argument        | Description                                                        |
-| --------------- | ------------------------------------------------------------------ |
-| `query`         | String to search for in Host patterns (case-insensitive substring) |
-| `-r`, `--regex` | Treat the query as a regular expression                            |
-| `-a`, `--all`   | Include `Host *` catch-all blocks in results                       |
+| Argument          | Description                                                        |
+| ----------------- | ------------------------------------------------------------------ |
+| `query`           | String to search for in Host patterns (case-insensitive substring) |
+| `-r`, `--regex`   | Treat the query as a regular expression                            |
+| `-a`, `--all`     | Include `Host *` catch-all blocks in results                       |
+| `-s`, `--simple`  | Print plain, copy-pasteable `ssh_config` blocks instead of a table |
 
 Returns exit code `1` when no results are found.
 
@@ -31,6 +32,9 @@ sshfind '^web' --regex
 
 # Include the global Host * block
 sshfind prod --all
+
+# Simple, copy-pasteable output
+sshfind prod --simple
 ```
 
 ### Output
@@ -45,6 +49,15 @@ sshfind prod --all
 │ config.d/prod│ User deploy                    │
 │              │ IdentityFile ~/.ssh/id_ed25519 │
 ╰──────────────┴────────────────────────────────╯
+```
+
+With `--simple`, each block is printed as valid `ssh_config` text you can copy straight into a config file, with no table formatting:
+
+```
+Host prod-server
+    Hostname 10.0.1.42
+    User deploy
+    IdentityFile ~/.ssh/id_ed25519
 ```
 
 ## Installation
